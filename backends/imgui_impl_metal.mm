@@ -692,7 +692,17 @@ static void ImGui_ImplMetal_InvalidateDeviceObjectsForPlatformWindows()
     "fragment half4 fragment_main(VertexOut in [[stage_in]],\n"
     "                             texture2d<half, access::sample> texture [[texture(0)]]) {\n"
     "    constexpr sampler linearSampler(coord::normalized, min_filter::linear, mag_filter::linear, mip_filter::linear);\n"
-    "    half4 texColor = texture.sample(linearSampler, in.texCoords);\n"
+    "    constexpr sampler nearestSampler(coord::normalized, min_filter::nearest, mag_filter::nearest, mip_filter::nearest);\n"
+    "    \n"
+    "    // Check if alpha is exactly 254/255 (0.9961)\n"
+    "    half4 texColor;\n"
+    "    if (abs(in.color.a - 0.9961) < 0.001) {\n"
+    "        // Use nearest neighbor sampling for pixel art or special textures\n"
+    "        texColor = texture.sample(nearestSampler, in.texCoords);\n"
+    "    } else {\n"
+    "        // Use default linear sampling for everything else\n"
+    "        texColor = texture.sample(linearSampler, in.texCoords);\n"
+    "    }\n"
     "    return half4(in.color) * texColor;\n"
     "}\n";
 
